@@ -1,4 +1,4 @@
-# LanCast · 手机直接操作电脑的内网投屏
+﻿# LanCast · 手机直接操作电脑的内网投屏
 
 把 Windows 电脑的屏幕实时投到同一局域网里的手机、iPad、安卓平板或另一台电脑上，并让手机直接当**触控板、键盘、手柄和自定义按键面板**操作电脑。**观看端只需要浏览器**（iOS / iPadOS Safari、Android Chrome、任意桌面浏览器），不用安装 App。
 
@@ -17,7 +17,7 @@
 
 **方式一：Windows 安装包（推荐）**
 
-下载 [最新 Release](https://github.com/zzm1234560621-prog/lancast/releases/latest) 里的 `LanCast-0.1.0-win64.zip`，解压后运行 `LanCast.exe`。不需要 Python。
+下载 [最新 Release](https://github.com/zzm1234560621-prog/lancast/releases/latest) 里的 `LanCast-*-win64.zip`，解压后运行 `LanCast.exe`。不需要 Python。
 
 **方式二：源码运行**
 
@@ -257,3 +257,4 @@ lancast/
 ## License
 
 [MIT](LICENSE) © 2026 zzm1234560621-prog
+

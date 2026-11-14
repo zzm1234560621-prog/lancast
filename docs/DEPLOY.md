@@ -1,10 +1,10 @@
-# 部署 LanCast
+﻿# 部署 LanCast
 
 LanCast 的“服务端”是运行在**要被投屏的那台 Windows 电脑**上的程序；手机/平板只打开浏览器，不装 App。它必须运行在当前登录用户的桌面会话里，才能采集屏幕和注入鼠标键盘，所以不要把它装成 Windows 服务或计划任务里的“不管用户是否登录都运行”。
 
 ## 1. 直接运行 Windows 包（推荐给普通用户）
 
-1. 从 [GitHub Releases](https://github.com/zzm1234560621-prog/lancast/releases/latest) 下载 `LanCast-0.1.0-win64.zip`。
+1. 从 [GitHub Releases](https://github.com/zzm1234560621-prog/lancast/releases/latest) 下载 `LanCast-*-win64.zip`。
 2. 解压到一个固定目录，例如 `C:\Apps\LanCast`。**整个文件夹要一起保留**，`LanCast.exe` 旁边的 `_internal` 不能删。
 3. 双击 `LanCast.exe`。如果 SmartScreen 提示“未知发布者”，选“更多信息 → 仍要运行”。
 4. Windows 防火墙第一次会询问是否允许网络访问，**勾选专用/公用网络并允许**。
@@ -155,3 +155,4 @@ powershell -ExecutionPolicy Bypass -File packaging\verify.ps1 `
 | 有画面但不能控制 | 管理页给该设备打开“允许控制”；总开关是否开 |
 | 端口冲突 | `--port 9443 --admin-port 9442` |
 | 每次设置都丢 | 确认数据目录可写；设置现在会写入 `settings.json` |
+
