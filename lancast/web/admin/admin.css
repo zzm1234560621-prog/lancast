@@ -1420,3 +1420,10 @@ input:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+.form-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
