@@ -121,6 +121,7 @@ const els = {
   settingsBtn: $('settings-btn'),
   keyLayer: $('key-layer'),
   textInput: $('text-input'),
+  keyboardClose: $('keyboard-close'),
   fitBtn: $('fit-btn'),
   fitLabel: $('fit-label'),
   statsBtn: $('stats-btn'),
@@ -310,6 +311,7 @@ let viewerQualityAllowed = true;
 let controlMode = 'view';
 let preferredControlMode = 'view';
 let editingLayout = false;
+let keyboardOpen = false;
 let inputSettings = normalizeInputSettings(null);
 let qualityPrefs = normalizeQualityPreferences(null);
 let gamepadMapping = normalizeGamepadMapping(null);
@@ -403,6 +405,9 @@ function setPhase(next) {
     setToolbarVisible(true);
   } else {
     setToolbarVisible(false);
+    if (textInput) {
+      textInput.blur();
+    }
     if (keyLayer) {
       setKeyLayerVisible(false);
     }
@@ -1781,6 +1786,10 @@ function updateControlUi() {
     els.keysBtn.classList.toggle('is-active', visible);
     els.keysBtn.setAttribute('aria-pressed', visible ? 'true' : 'false');
   }
+  if (els.kbdBtn) {
+    els.kbdBtn.classList.toggle('is-active', keyboardOpen);
+    els.kbdBtn.setAttribute('aria-pressed', keyboardOpen ? 'true' : 'false');
+  }
   if (pointerControl) {
     pointerControl.setMode(controlMode);
   }
@@ -2017,10 +2026,31 @@ function toggleKeyLayer() {
   setToolbarVisible(true);
 }
 
+function setKeyboardOpen(open) {
+  keyboardOpen = !!open;
+  if (els.kbdBtn) {
+    els.kbdBtn.classList.toggle('is-active', keyboardOpen);
+    els.kbdBtn.setAttribute('aria-pressed', keyboardOpen ? 'true' : 'false');
+  }
+  if (els.keyboardClose) {
+    els.keyboardClose.hidden = !keyboardOpen;
+  }
+  if (keyboardOpen) {
+    setToolbarVisible(true);
+  }
+}
+
+function closeKeyboard() {
+  if (textInput) {
+    textInput.blur();
+  }
+}
+
 function openSettingsSheet() {
   if (!settingsPanel) {
     return;
   }
+  closeKeyboard();
   if (settingsPanel.isOpen()) {
     settingsPanel.close();
   } else {
@@ -2159,6 +2189,7 @@ function createControlStack() {
     keyLayer: keyLayer,
     onOpen: function () {
       editingLayout = true;
+      closeKeyboard();
       releaseAllInput(true);
       if (sender) {
         sender.setEnabled(false);
@@ -2209,6 +2240,7 @@ function createControlStack() {
       return autoLevel;
     },
     onOpen: function () {
+      closeKeyboard();
       releaseAllInput(true);
       updateControlUi();
     },
@@ -2248,6 +2280,9 @@ function createControlStack() {
     sender: sender,
     canSend: function () {
       return inputAllowed();
+    },
+    onFocusChange: function (focused) {
+      setKeyboardOpen(focused);
     }
   });
   textInput.bind();
@@ -2310,6 +2345,7 @@ function closeMenus() {
 }
 
 function toggleMenu(which) {
+  closeKeyboard();
   let button = null;
   let menu = null;
   if (which === 'display') {
@@ -2358,6 +2394,9 @@ function scheduleToolbarHide() {
     }
     if (anyMenuOpen()) {
       scheduleToolbarHide();
+      return;
+    }
+    if (keyboardOpen) {
       return;
     }
     if (phase === 'streaming') {
@@ -2754,10 +2793,18 @@ function bindEvents() {
         toast(t('control.deniedHint'));
         return;
       }
-      if (textInput) {
+      if (textInput && textInput.isFocused()) {
+        closeKeyboard();
+      } else if (textInput) {
         textInput.focus();
       }
       setToolbarVisible(true);
+    });
+  }
+  if (els.keyboardClose) {
+    els.keyboardClose.addEventListener('click', function (event) {
+      event.stopPropagation();
+      closeKeyboard();
     });
   }
   if (els.settingsBtn) {
@@ -2813,6 +2860,11 @@ function bindEvents() {
     }
   }, { passive: true });
 
+  els.stage.addEventListener('pointerdown', function () {
+    if (textInput && textInput.isFocused()) {
+      closeKeyboard();
+    }
+  }, true);
   els.stage.addEventListener('pointermove', function (event) {
     if (event.pointerType === 'mouse' && phase === 'streaming' && toolbarVisible) {
       scheduleToolbarHide();

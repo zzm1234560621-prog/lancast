@@ -1128,6 +1128,7 @@ export class TextInput {
     this.el = opts.el;
     this.sender = opts.sender;
     this.canSend = opts.canSend || function () { return true; };
+    this.onFocusChange = opts.onFocusChange || null;
     this.composing = false;
     this.skipInput = false;
     this._bound = false;
@@ -1135,6 +1136,8 @@ export class TextInput {
     this._onStart = this._handleStart.bind(this);
     this._onEnd = this._handleEnd.bind(this);
     this._onKey = this._handleKey.bind(this);
+    this._onFocus = this._handleFocus.bind(this);
+    this._onBlur = this._handleBlur.bind(this);
   }
 
   bind() {
@@ -1146,6 +1149,25 @@ export class TextInput {
     this.el.addEventListener('compositionstart', this._onStart);
     this.el.addEventListener('compositionend', this._onEnd);
     this.el.addEventListener('keydown', this._onKey);
+    this.el.addEventListener('focus', this._onFocus);
+    this.el.addEventListener('blur', this._onBlur);
+  }
+
+  isFocused() {
+    return typeof document !== 'undefined' && document.activeElement === this.el;
+  }
+
+  _handleFocus() {
+    if (this.onFocusChange) {
+      this.onFocusChange(true);
+    }
+  }
+
+  _handleBlur() {
+    this.composing = false;
+    if (this.onFocusChange) {
+      this.onFocusChange(false);
+    }
   }
 
   focus() {
@@ -1210,6 +1232,12 @@ export class TextInput {
 
   _handleKey(event) {
     if (this.composing || !this.canSend()) {
+      return;
+    }
+    if (event.code === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.blur();
       return;
     }
     if (event.code !== 'Backspace' && event.code !== 'Enter' && event.code !== 'Tab') {

@@ -244,16 +244,26 @@ export class H264Player extends BasePlayer {
       this._pendingDecode.delete(frame.timestamp);
     }
     this._errorCount = 0;
-    if (this._latestFrame) {
+    // Draw as soon as the decoder hands us a frame. Waiting for the next rAF
+    // can add up to one display refresh of latency; the canvas compositor
+    // already presents the newest content at the next vsync.
+    let drawn = false;
+    if (this.ctx) {
       try {
-        this._latestFrame.close();
+        this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
+        drawn = true;
       } catch (error) {
-        /* ignore */
+        drawn = false;
       }
-      // Replacing a decoded frame before it was presented is normal
-      // backpressure, not a real drop (PROTOCOL / quality spec).
     }
-    this._latestFrame = frame;
+    if (drawn) {
+      this._emit(frame.timestamp);
+    }
+    try {
+      frame.close();
+    } catch (error) {
+      /* ignore */
+    }
   }
 
   _onDecoderError(error, generation) {

@@ -298,7 +298,7 @@ test('quality: normalizeQualityPreferences clamps numeric fields', () => {
   assert.equal(prefs.preset, 'custom');
   assert.equal(prefs.custom.h264.resolution, '720p');
   assert.equal(prefs.custom.h264.fps, 30);
-  assert.equal(prefs.custom.h264.bitrateMbps, 50);
+  assert.equal(prefs.custom.h264.bitrateMbps, 100);
   assert.equal(prefs.custom.jpeg.resolution, '1440p');
   assert.equal(prefs.custom.jpeg.fps, 20);
   assert.equal(prefs.custom.jpeg.quality, 30);

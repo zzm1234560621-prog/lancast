@@ -245,6 +245,10 @@
       </div>
 
       <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+      <button id="keyboard-close" class="keyboard-close" type="button" hidden>
+        <span class="icon" data-icon="chevron-down" aria-hidden="true"></span>
+        <span data-i18n="keyboard.close">收起键盘</span>
+      </button>
       <textarea id="text-input" class="text-input" rows="1" autocomplete="off"
                 autocapitalize="off" autocorrect="off" spellcheck="false"
                 aria-label="Remote keyboard" data-i18n-aria-label="keyboard.title"></textarea>
@@ -353,6 +357,8 @@
                 <option value="30">30 fps</option>
                 <option value="45">45 fps</option>
                 <option value="60">60 fps</option>
+                <option value="90">90 fps</option>
+                <option value="120">120 fps</option>
               </select>
             </div>
             <div class="setting-row">
@@ -360,7 +366,7 @@
                 <label for="quality-h264-bitrate" data-i18n="quality.bitrate">码率</label>
                 <output id="quality-h264-bitrate-val" for="quality-h264-bitrate">10 Mbps</output>
               </div>
-              <input id="quality-h264-bitrate" class="range" type="range" min="1" max="50" step="1" value="10">
+              <input id="quality-h264-bitrate" class="range" type="range" min="1" max="100" step="1" value="10">
             </div>
           </div>
 

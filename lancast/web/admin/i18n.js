@@ -117,7 +117,7 @@ const ZH = {
   reset: "重置",
   applied: "已应用",
   saveFailed: "保存失败",
-  invalidBitrate: "码率必须在 1–50 Mbps 之间。",
+  invalidBitrate: "码率必须在 1–100 Mbps 之间。",
 
   securityTitle: "安全信息",
   tlsFingerprint: "TLS 证书指纹",
@@ -261,7 +261,7 @@ const EN = {
   reset: "Reset",
   applied: "Applied",
   saveFailed: "Save failed",
-  invalidBitrate: "Bitrate must be between 1 and 50 Mbps.",
+  invalidBitrate: "Bitrate must be between 1 and 100 Mbps.",
 
   securityTitle: "Security",
   tlsFingerprint: "TLS certificate fingerprint",

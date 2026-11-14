@@ -2259,3 +2259,32 @@ summary:focus-visible {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 120px);
   }
 }
+/* ---------- keyboard dismissal ---------- */
+
+.keyboard-close {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  z-index: 16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(122, 170, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(18, 23, 31, 0.9);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.keyboard-close .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
