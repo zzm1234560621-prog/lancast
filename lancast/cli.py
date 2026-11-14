@@ -72,12 +72,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--port", type=_port, default=8443, help="局域网 HTTPS 端口（默认 8443）")
     s.add_argument("--admin-port", type=_port, default=8442, help="本机管理页面端口（默认 8442）")
     s.add_argument("--bind", default="0.0.0.0", help="监听地址（默认所有网卡；来源仍限私网地址）")
-    s.add_argument("--fps", type=int, default=60, help="H.264 帧率上限（默认 60）")
-    s.add_argument("--max-res", type=_resolution, default=(1920, 1080),
+    # These five also live in the admin page. default=None means "not given on the
+    # command line", so a value saved from the admin page may take over (SERVE_DEFAULTS).
+    s.add_argument("--fps", type=int, default=None, help="H.264 帧率上限（默认 60）")
+    s.add_argument("--max-res", type=_resolution, default=None,
                    help="输出分辨率上限，如 1920x1080、1440p、native（默认 1080p）")
-    s.add_argument("--bitrate", type=_bitrate, default=10_000, help="H.264 码率，如 10M、6000k（默认 10M）")
-    s.add_argument("--jpeg-quality", type=int, default=70, help="兼容模式 JPEG 质量 20–95（默认 70）")
-    s.add_argument("--jpeg-fps", type=int, default=15, help="兼容模式帧率（默认 15）")
+    s.add_argument("--bitrate", type=_bitrate, default=None, help="H.264 码率，如 10M、6000k（默认 10M）")
+    s.add_argument("--jpeg-quality", type=int, default=None, help="兼容模式 JPEG 质量 20–95（默认 70）")
+    s.add_argument("--jpeg-fps", type=int, default=None, help="兼容模式帧率（默认 15）")
     s.add_argument("--encoder", default="auto", help="H.264 编码器：auto、h264_qsv、libx264 …")
     s.add_argument("--retune", action="store_true", help="启动时重新测速，重新选择最优 H.264 编码器")
     s.add_argument("--capture", default="auto", choices=["auto", "dxgi", "mss", "synthetic"],
@@ -116,25 +118,30 @@ def _setup_console() -> None:
             pass
 
 
-def _serve(args: argparse.Namespace) -> int:
-    from .net import parse_cidrs
-    from .server import serve
+SERVE_DEFAULTS = {"fps": 60, "max_res": (1920, 1080), "bitrate": 10_000, "jpeg_quality": 70, "jpeg_fps": 15}
 
-    try:
-        parse_cidrs(args.allow_cidr)
-    except ValueError as exc:
-        print(f"--allow-cidr 无效：{exc}", file=sys.stderr)
-        return 2
+
+def settings_from_args(args: argparse.Namespace) -> Settings:
+    """Settings for ``serve``: explicit command-line values beat values saved from the
+    admin page, which in turn beat the built-in defaults."""
+
+    def given(name: str) -> bool:
+        return getattr(args, name, None) is not None
+
+    def value(name: str):
+        return getattr(args, name) if given(name) else SERVE_DEFAULTS[name]
+
+    max_res = value("max_res")
     settings = Settings(
         port=args.port,
         admin_port=args.admin_port,
         bind=args.bind,
-        fps=max(1, min(240, args.fps)),
-        max_width=args.max_res[0],
-        max_height=args.max_res[1],
-        bitrate_kbps=args.bitrate,
-        jpeg_quality=max(20, min(95, args.jpeg_quality)),
-        jpeg_fps=max(1, min(60, args.jpeg_fps)),
+        fps=max(1, min(240, value("fps"))),
+        max_width=max_res[0],
+        max_height=max_res[1],
+        bitrate_kbps=value("bitrate"),
+        jpeg_quality=max(20, min(95, value("jpeg_quality"))),
+        jpeg_fps=max(1, min(60, value("jpeg_fps"))),
         encoder=args.encoder,
         retune=args.retune,
         capture=args.capture,
@@ -148,21 +155,34 @@ def _serve(args: argparse.Namespace) -> int:
         open_admin=not args.no_open,
     )
     skip: set[str] = set()
-    if args.fps != 60:
+    if given("fps"):
         skip.add("fps")
-    if args.max_res != (1920, 1080):
+    if given("max_res"):
         skip.update(("max_width", "max_height"))
-    if args.bitrate != 10_000:
+    if given("bitrate"):
         skip.add("bitrate_kbps")
-    if args.jpeg_quality != 70:
+    if given("jpeg_quality"):
         skip.add("jpeg_quality")
-    if args.jpeg_fps != 15:
+    if given("jpeg_fps"):
         skip.add("jpeg_fps")
     if args.no_approval:
         skip.add("approval")
     if args.no_control:
         skip.add("control_enabled")
     settings.load_live(skip)
+    return settings
+
+
+def _serve(args: argparse.Namespace) -> int:
+    from .net import parse_cidrs
+    from .server import serve
+
+    try:
+        parse_cidrs(args.allow_cidr)
+    except ValueError as exc:
+        print(f"--allow-cidr 无效：{exc}", file=sys.stderr)
+        return 2
+    settings = settings_from_args(args)
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(levelname).1s %(name)s: %(message)s",

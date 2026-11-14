@@ -227,8 +227,11 @@ effective quality share one encoder.
 | `native` (原画) | no downscaling · 60 · 35 000 kbps | no downscaling · 85 · 20 |
 | `custom` | from `max_width`, `max_height`, `fps`, `bitrate_kbps` | from `max_width`, `max_height`, `jpeg_quality`, `fps` |
 
-Custom values are clamped server-side: size 320×240 … 7680×4320, fps 5 … 240,
-bitrate 500 … 200 000 kbps, JPEG quality 20 … 95. Unknown presets mean `standard`.
+Custom values are clamped server-side: size 320×240 … 7680×4320, JPEG quality
+20 … 95, fps from 5 up to the **higher of the PC's own fps setting and 60** (JPEG:
+its JPEG fps setting and 30), bitrate from 500 kbps up to the **higher of the PC's
+bitrate setting and 35 000**. Any paired viewer may pick a custom quality, so it
+cannot load the PC beyond what the owner configured. Unknown presets mean `standard`.
 If the PC owner disabled viewer-chosen quality (`auth_ok.viewer_quality` is
 false) every viewer gets `standard`. A display runs at most 4 distinct encoders;
 beyond that the closest existing one is reused. **`stream.quality` always

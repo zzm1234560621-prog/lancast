@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -112,11 +113,14 @@ class Settings:
             return {}
         if not isinstance(raw, dict):
             return {}
-        patch = {key: value for key, value in raw.items()
-                 if key in LIVE_SETTINGS and key not in skip}
-        if not patch:
-            return {}
-        try:
-            return self.apply_live(patch)
-        except ValueError:
-            return {}
+        applied: dict = {}
+        for key, value in raw.items():
+            if key not in LIVE_SETTINGS or key in skip:
+                continue
+            # One bad entry (e.g. a value outside a later-lowered limit) must not
+            # throw away every other saved setting.
+            try:
+                applied.update(self.apply_live({key: value}))
+            except ValueError as exc:
+                logging.getLogger("lancast.config").warning("ignoring saved setting %s: %s", key, exc)
+        return applied

@@ -110,9 +110,16 @@ def quality_key(request, codec: str, settings) -> tuple:
     std = resolve_quality(("standard",), codec, settings)
     w = _clamped_int(request.get("max_width"), "max_width", std.max_width)
     h = _clamped_int(request.get("max_height"), "max_height", std.max_height)
-    fps = _clamped_int(request.get("fps"), "fps", std.fps)
+    # Any paired viewer -- even a view-only one -- may pick a custom quality, so it must
+    # not be able to load the PC beyond what the owner allows: the higher of the owner's
+    # own setting and what the built-in presets already use (H.264 60 fps / 35 Mbps,
+    # JPEG 30 fps). Raising fps/bitrate in the admin page raises these caps too.
+    fps_cap = max(std.fps, 60 if codec == "h264" else 30)
+    fps = min(_clamped_int(request.get("fps"), "fps", std.fps), fps_cap)
     if codec == "h264":
-        return ("custom", w, h, fps, _clamped_int(request.get("bitrate_kbps"), "bitrate_kbps", std.bitrate_kbps))
+        kbps_cap = max(std.bitrate_kbps, QUALITY_PRESETS["native"][3])
+        kbps = min(_clamped_int(request.get("bitrate_kbps"), "bitrate_kbps", std.bitrate_kbps), kbps_cap)
+        return ("custom", w, h, fps, kbps)
     return ("custom", w, h, fps, _clamped_int(request.get("jpeg_quality"), "jpeg_quality", std.jpeg_quality))
 
 

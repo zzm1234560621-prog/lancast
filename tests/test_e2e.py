@@ -439,7 +439,8 @@ def test_quality_presets_custom_clamping_and_cap():
             custom = await _qr_viewer(h, "custom")
             s = await _stream_quality(custom, {"codec": "h264", "quality": {
                 "preset": "custom", "max_width": 100, "max_height": 100, "fps": 999, "bitrate_kbps": 1}})
-            assert s["quality"] == {"preset": "custom", "max_width": 320, "max_height": 240, "fps": 240, "bitrate_kbps": 500}
+            # fps is capped at max(PC setting = 30 in this harness, 60): viewers cannot overload the PC
+            assert s["quality"] == {"preset": "custom", "max_width": 320, "max_height": 240, "fps": 60, "bitrate_kbps": 500}
             assert (s["width"], s["height"]) == (320, 180)
 
             jpeg = await _qr_viewer(h, "jpeg")
