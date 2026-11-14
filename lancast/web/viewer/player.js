@@ -578,34 +578,41 @@ export class JpegPlayer extends BasePlayer {
       }
       return;
     }
-    if (this._latest) {
-      if (this._latest.bitmap) {
-        try {
-          this._latest.bitmap.close();
-        } catch (error) {
-          /* ignore */
-        }
+    let drawn = false;
+    if (this.ctx) {
+      try {
+        this.ctx.drawImage(bitmap, 0, 0, this.canvas.width, this.canvas.height);
+        drawn = true;
+      } catch (error) {
+        drawn = false;
       }
-      // A newer decoded image replacing an unpresented one is not a drop.
     }
-    this._latest = { bitmap: bitmap, image: null, tsUs: tsUs };
+    try {
+      bitmap.close();
+    } catch (error) {
+      /* ignore */
+    }
+    if (drawn) {
+      this._emit(tsUs);
+    }
   }
 
   _acceptImage(image, tsUs) {
     if (this._disposed) {
       return;
     }
-    if (this._latest) {
-      if (this._latest.bitmap) {
-        try {
-          this._latest.bitmap.close();
-        } catch (error) {
-          /* ignore */
-        }
+    let drawn = false;
+    if (this.ctx) {
+      try {
+        this.ctx.drawImage(image, 0, 0, this.canvas.width, this.canvas.height);
+        drawn = true;
+      } catch (error) {
+        drawn = false;
       }
-      // A newer decoded image replacing an unpresented one is not a drop.
     }
-    this._latest = { bitmap: null, image: image, tsUs: tsUs };
+    if (drawn) {
+      this._emit(tsUs);
+    }
   }
 
   _draw() {

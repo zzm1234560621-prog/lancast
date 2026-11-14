@@ -209,6 +209,22 @@ export class SettingsPanel {
     const jpegFps = byId('quality-jpeg-fps');
     const jpegQuality = byId('quality-jpeg-quality');
     const jpegQualityValue = byId('quality-jpeg-quality-val');
+    this.lowLatencyBtn = byId('quality-lowlatency');
+
+    if (this.lowLatencyBtn) {
+      this.lowLatencyBtn.addEventListener('click', () => {
+        if (!this.qualityAllowed) {
+          return;
+        }
+        const quality = this.getQuality();
+        quality.preset = 'custom';
+        quality.custom.h264.resolution = '720p';
+        quality.custom.h264.fps = 120;
+        quality.custom.h264.bitrateMbps = 8;
+        this.onQualityChange(quality);
+        this.syncQuality();
+      });
+    }
 
     const markCustom = () => {
       if (!this.qualityAllowed) {
@@ -342,6 +358,9 @@ export class SettingsPanel {
       presets[i].classList.toggle('is-selected', active);
       presets[i].setAttribute('aria-pressed', active ? 'true' : 'false');
       presets[i].disabled = !this.qualityAllowed;
+    }
+    if (this.lowLatencyBtn) {
+      this.lowLatencyBtn.disabled = !this.qualityAllowed;
     }
 
     const custom = quality.custom;
