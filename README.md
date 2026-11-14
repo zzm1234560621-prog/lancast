@@ -14,6 +14,12 @@
 
 ## 快速开始
 
+**方式一：Windows 安装包（推荐）**
+
+下载 [最新 Release](https://github.com/zzm1234560621-prog/lancast/releases/latest) 里的 `LanCast-0.1.0-win64.zip`，解压后运行 `LanCast.exe`。不需要 Python。
+
+**方式二：源码运行**
+
 ```powershell
 git clone https://github.com/zzm1234560621-prog/lancast.git
 cd lancast
@@ -22,7 +28,7 @@ python -m venv .venv
 .venv\Scripts\python -m lancast
 ```
 
-也可以直接运行打包好的 `packaging\dist\LanCast\LanCast.exe`（打包方法见文末），不需要装 Python。完整的安装、防火墙、开机自启、升级和卸载步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。
+完整的安装、防火墙、开机自启、升级和卸载步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 启动后：
 
