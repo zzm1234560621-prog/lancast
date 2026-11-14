@@ -847,6 +847,7 @@ async def api_settings(request: web.Request) -> web.Response:
     except ValueError as exc:
         return json_error(400, str(exc))
     if applied:
+        state.settings.save_live()
         if applied.keys() & {"fps", "max_width", "max_height", "bitrate_kbps", "jpeg_quality", "jpeg_fps"}:
             state.hub.settings_changed()     # only video settings need the encoders re-opened
         if "control_enabled" in applied:

@@ -125,3 +125,28 @@ def test_partially_invalid_patch_is_rejected_atomically(patch):
 def test_non_dict_patch_is_rejected():
     with pytest.raises(ValueError):
         Settings().apply_live([("fps", 30)])
+
+def test_live_settings_are_persisted_and_can_be_skipped(tmp_path):
+    saved = Settings(data_dir=tmp_path)
+    saved.apply_live({"fps": 120, "max_width": 2560, "bitrate_kbps": 75_000, "viewer_quality": False})
+    saved.save_live()
+
+    restored = Settings(data_dir=tmp_path)
+    applied = restored.load_live()
+    assert applied["fps"] == 120
+    assert restored.max_width == 2560
+    assert restored.bitrate_kbps == 75_000
+    assert restored.viewer_quality is False
+
+    cli_wins = Settings(data_dir=tmp_path)
+    cli_wins.load_live({"fps", "max_width"})
+    assert cli_wins.fps == 60
+    assert cli_wins.max_width == 1920
+    assert cli_wins.bitrate_kbps == 75_000
+
+
+def test_corrupt_persisted_settings_are_ignored(tmp_path):
+    (tmp_path / "settings.json").write_text("{not json", encoding="utf-8")
+    settings = Settings(data_dir=tmp_path)
+    assert settings.load_live() == {}
+    assert settings.fps == 60

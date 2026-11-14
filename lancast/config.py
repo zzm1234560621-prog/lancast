@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
+SETTINGS_FILE = "settings.json"
 
 
 def default_data_dir() -> Path:
@@ -85,3 +88,34 @@ class Settings:
         for key, value in clean.items():
             setattr(self, key, value)
         return clean
+
+    def save_live(self) -> None:
+        """Persist the admin-editable settings so they survive a restart."""
+        payload = {key: getattr(self, key) for key in LIVE_SETTINGS}
+        path = Path(self.data_dir) / SETTINGS_FILE
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_name(path.name + ".tmp")
+            tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(tmp, path)
+        except OSError:
+            # A read-only data directory must not break live settings changes.
+            pass
+
+    def load_live(self, skip: tuple[str, ...] | set[str] = ()) -> dict:
+        """Restore saved admin settings, skipping keys explicitly set by the CLI."""
+        path = Path(self.data_dir) / SETTINGS_FILE
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        if not isinstance(raw, dict):
+            return {}
+        patch = {key: value for key, value in raw.items()
+                 if key in LIVE_SETTINGS and key not in skip}
+        if not patch:
+            return {}
+        try:
+            return self.apply_live(patch)
+        except ValueError:
+            return {}

@@ -128,7 +128,7 @@ def _serve(args: argparse.Namespace) -> int:
         port=args.port,
         admin_port=args.admin_port,
         bind=args.bind,
-        fps=max(1, min(120, args.fps)),
+        fps=max(1, min(240, args.fps)),
         max_width=args.max_res[0],
         max_height=args.max_res[1],
         bitrate_kbps=args.bitrate,
@@ -145,6 +145,22 @@ def _serve(args: argparse.Namespace) -> int:
         data_dir=args.data_dir,
         open_admin=not args.no_open,
     )
+    skip: set[str] = set()
+    if args.fps != 60:
+        skip.add("fps")
+    if args.max_res != (1920, 1080):
+        skip.update(("max_width", "max_height"))
+    if args.bitrate != 10_000:
+        skip.add("bitrate_kbps")
+    if args.jpeg_quality != 70:
+        skip.add("jpeg_quality")
+    if args.jpeg_fps != 15:
+        skip.add("jpeg_fps")
+    if args.no_approval:
+        skip.add("approval")
+    if args.no_control:
+        skip.add("control_enabled")
+    settings.load_live(skip)
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(levelname).1s %(name)s: %(message)s",
