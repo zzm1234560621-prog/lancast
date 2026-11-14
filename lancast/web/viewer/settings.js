@@ -218,9 +218,9 @@ export class SettingsPanel {
         }
         const quality = this.getQuality();
         quality.preset = 'custom';
-        quality.custom.h264.resolution = '720p';
-        quality.custom.h264.fps = 120;
-        quality.custom.h264.bitrateMbps = 8;
+        quality.custom.h264.resolution = '1080p';
+        quality.custom.h264.fps = 60;
+        quality.custom.h264.bitrateMbps = 10;
         this.onQualityChange(quality);
         this.syncQuality();
       });

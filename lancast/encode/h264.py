@@ -272,10 +272,10 @@ def _bgra_to_i420(bgra: np.ndarray, out_w: int, out_h: int) -> np.ndarray:
     """
     src_h, src_w = bgra.shape[:2]
     if (src_w, src_h) != (out_w, out_h):
-        shrinking = out_w * out_h < src_w * src_h
-        bgra = cv2.resize(
-            bgra, (out_w, out_h), interpolation=cv2.INTER_AREA if shrinking else cv2.INTER_LINEAR
-        )
+        # INTER_AREA looks better but costs ~3x more at 2880x1800 -> 1080p.
+        # Linear downscaling keeps capture-to-encode latency low; the encoder's
+        # bitrate/quality settings dominate the final sharpness.
+        bgra = cv2.resize(bgra, (out_w, out_h), interpolation=cv2.INTER_LINEAR)
     return cv2.cvtColor(bgra, cv2.COLOR_BGRA2YUV_I420)
 
 
