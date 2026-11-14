@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+*.pem
+*.key
+.preview-data/
+packaging/build/
+packaging/dist/
+.claude/

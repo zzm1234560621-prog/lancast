@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LanCast">
+  <title>LanCast</title>
+  <link rel="stylesheet" href="/static/viewer/style.css">
+  <link rel="manifest" href="/static/viewer/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/static/viewer/icon.svg">
+  <link rel="apple-touch-icon" href="/static/viewer/icon.svg">
+</head>
+<body>
+  <main id="app">
+    <section id="screen-connecting" class="screen screen-center" hidden>
+      <div class="connecting">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1 class="connecting-title" data-i18n="connecting.title">正在连接…</h1>
+        <p class="muted" data-i18n="connecting.hint">正在与电脑建立安全连接</p>
+        <button id="connecting-cancel" class="btn btn-ghost btn-small" type="button" data-i18n="connecting.usePin">改用配对码</button>
+      </div>
+    </section>
+
+    <section id="screen-pair" class="screen screen-scroll" hidden>
+      <div class="pair-wrap">
+        <header class="brand">
+          <span class="icon brand-mark" data-icon="logo" aria-hidden="true"></span>
+          <div class="brand-text">
+            <h1 class="brand-name" data-i18n="app.brand">LanCast</h1>
+            <p class="brand-tagline" data-i18n="app.tagline">局域网低延迟投屏</p>
+          </div>
+        </header>
+
+        <div class="card pair-card">
+          <h2 class="card-title" data-i18n="pair.title">连接到电脑</h2>
+          <p class="card-subtitle" data-i18n="pair.subtitle">在电脑的 LanCast 窗口中找到 6 位配对码。</p>
+          <form id="pair-form" novalidate>
+            <div class="field">
+              <label class="field-label" for="pin" data-i18n="pair.pinLabel">配对码</label>
+              <input id="pin" class="input pin-input" type="text" inputmode="numeric"
+                     autocomplete="one-time-code" pattern="[0-9]*" maxlength="6"
+                     spellcheck="false" autocapitalize="off" aria-describedby="pair-error"
+                     data-i18n-placeholder="pair.pinPlaceholder">
+            </div>
+            <div class="field">
+              <label class="field-label" for="device-name" data-i18n="pair.nameLabel">设备名称</label>
+              <input id="device-name" class="input" type="text" maxlength="40"
+                     autocomplete="nickname" spellcheck="false"
+                     data-i18n-placeholder="pair.namePlaceholder">
+            </div>
+            <label class="check">
+              <input id="remember" type="checkbox" checked>
+              <span class="check-box icon" data-icon="check" aria-hidden="true"></span>
+              <span class="check-text">
+                <span class="check-title" data-i18n="pair.remember">记住此设备</span>
+                <span class="check-hint" data-i18n="pair.rememberHint">下次打开时无需重新输入配对码</span>
+              </span>
+            </label>
+            <p id="pair-error" class="form-error" role="alert"></p>
+            <button id="pair-submit" class="btn btn-primary btn-block" type="submit">
+              <span data-i18n="pair.submit">连接</span>
+            </button>
+          </form>
+        </div>
+
+        <details class="cert">
+          <summary>
+            <span class="icon summary-icon" data-icon="shield" aria-hidden="true"></span>
+            <span class="summary-label" data-i18n="pair.certTitle">证书说明</span>
+            <span class="icon summary-chevron" data-icon="chevron-down" aria-hidden="true"></span>
+          </summary>
+          <div class="cert-body">
+            <p data-i18n="pair.certIntro">浏览器提示证书警告是正常的：LanCast 使用自签名证书，仅用于在局域网内加密连接。</p>
+            <p data-i18n="pair.certTrust">安装并信任 LanCast CA 可以消除警告，并有助于防止中间人攻击。</p>
+            <a class="download-link" href="/ca.crt" download>
+              <span class="icon" data-icon="download" aria-hidden="true"></span>
+              <span data-i18n="pair.certDownload">下载 CA 证书</span>
+            </a>
+            <div class="cert-group">
+              <h3 data-i18n="pair.certIosTitle">iOS / iPadOS</h3>
+              <ol>
+                <li data-i18n="pair.certIos1">打开下载的文件，在 设置 → 通用 → VPN 与设备管理 中安装描述文件。</li>
+                <li data-i18n="pair.certIos2">再打开 设置 → 通用 → 关于本机 → 证书信任设置，为 LanCast CA 打开完全信任。</li>
+              </ol>
+            </div>
+            <div class="cert-group">
+              <h3 data-i18n="pair.certAndroidTitle">Android</h3>
+              <ol>
+                <li data-i18n="pair.certAndroid1">下载后打开 设置 → 安全 → 加密与凭据 → 安装证书 → CA 证书。</li>
+                <li data-i18n="pair.certAndroid2">选择下载的文件完成安装。不同厂商的菜单名称可能略有差异。</li>
+              </ol>
+            </div>
+            <p class="cert-note" data-i18n="pair.certNote">请仅在你自己的电脑和设备上安装此 CA。</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="screen-pending" class="screen screen-center" hidden>
+      <div class="pending">
+        <span class="spinner spinner-large" aria-hidden="true"></span>
+        <h2 class="pending-title" data-i18n="pending.title">请在电脑上点击「允许」</h2>
+        <p id="pending-device" class="pending-device"></p>
+        <div class="pending-countdown" aria-live="polite">
+          <span id="pending-seconds" class="pending-seconds">60</span>
+          <span class="pending-unit" data-i18n="pending.seconds">秒</span>
+        </div>
+        <p class="muted pending-hint" data-i18n="pending.hint">在电脑的 LanCast 窗口中确认此设备</p>
+        <button id="pending-cancel" class="btn btn-ghost btn-small" type="button" data-i18n="pending.cancel">取消</button>
+      </div>
+    </section>
+
+    <section id="screen-stream" class="screen screen-stream" hidden>
+      <div id="stage" class="stage">
+        <div id="zoom-layer" class="zoom-layer">
+          <canvas id="canvas" width="1280" height="720"></canvas>
+          <div id="cursor" class="cursor" hidden aria-hidden="true"></div>
+        </div>
+        <div id="key-layer" class="key-layer" hidden aria-hidden="true"></div>
+      </div>
+
+      <div id="stats" class="stats" hidden aria-hidden="true">
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.resolution">分辨率</span><span id="stat-resolution" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.mode">模式</span><span id="stat-mode" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.quality">画质</span><span id="stat-quality" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.control">控制模式</span><span id="stat-control" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.input">输入速率</span><span id="stat-input" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.fps">渲染 FPS</span><span id="stat-fps" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.bitrate">码率</span><span id="stat-bitrate" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.rtt">RTT</span><span id="stat-rtt" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.latency">端到端延迟</span><span id="stat-latency" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.dropped">丢帧</span><span id="stat-dropped" class="stat-value">—</span></div>
+        <div class="stat-row"><span class="stat-label" data-i18n="stats.queue">解码队列</span><span id="stat-queue" class="stat-value">—</span></div>
+      </div>
+
+      <div id="toolbar" class="toolbar" role="toolbar" aria-label="观看控制" data-i18n-aria-label="a11y.toolbar">
+        <div id="display-wrap" class="tool-wrap" hidden>
+          <button id="display-btn" class="tool" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="icon" data-icon="monitor" aria-hidden="true"></span>
+            <span id="display-label" class="tool-label tool-label-persist"></span>
+            <span class="icon tool-chevron" data-icon="chevron-up" aria-hidden="true"></span>
+          </button>
+          <div id="display-menu" class="menu" role="menu" hidden></div>
+        </div>
+
+        <div class="tool-wrap">
+          <button id="codec-btn" class="tool" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="icon" data-icon="film" aria-hidden="true"></span>
+            <span id="codec-label" class="tool-label tool-label-persist"></span>
+            <span class="icon tool-chevron" data-icon="chevron-up" aria-hidden="true"></span>
+          </button>
+          <div id="codec-menu" class="menu" role="menu" hidden></div>
+        </div>
+
+        <div class="tool-wrap">
+          <button id="ctrl-btn" class="tool" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="icon" data-icon="mouse-pointer" aria-hidden="true"></span>
+            <span id="ctrl-label" class="tool-label tool-label-persist" data-i18n="control.mode.view">仅观看</span>
+            <span class="icon tool-chevron" data-icon="chevron-up" aria-hidden="true"></span>
+          </button>
+          <div id="ctrl-menu" class="menu" role="menu" hidden></div>
+        </div>
+
+        <div class="tool-wrap">
+          <button id="keys-btn" class="tool" type="button" aria-pressed="false">
+            <span class="icon" data-icon="grid" aria-hidden="true"></span>
+            <span class="tool-label" data-i18n="keys.button">按键</span>
+          </button>
+          <button id="keys-more-btn" class="tool tool-slim" type="button" aria-haspopup="menu" aria-expanded="false" data-i18n-aria-label="keys.menuTitle">
+            <span class="icon" data-icon="chevron-up" aria-hidden="true"></span>
+          </button>
+          <div id="keys-menu" class="menu" role="menu" hidden></div>
+        </div>
+
+        <button id="kbd-btn" class="tool" type="button">
+          <span class="icon" data-icon="keyboard" aria-hidden="true"></span>
+          <span class="tool-label" data-i18n="keyboard.button">键盘</span>
+        </button>
+
+        <button id="settings-btn" class="tool" type="button" data-i18n-aria-label="settings.open">
+          <span class="icon" data-icon="sliders" aria-hidden="true"></span>
+          <span class="tool-label" data-i18n="settings.open">设置</span>
+        </button>
+
+        <button id="fit-btn" class="tool" type="button">
+          <span class="icon" data-icon="fit" aria-hidden="true"></span>
+          <span id="fit-label" class="tool-label"></span>
+        </button>
+
+        <button id="stats-btn" class="tool" type="button" aria-pressed="false">
+          <span class="icon" data-icon="bar-chart-2" aria-hidden="true"></span>
+          <span class="tool-label" data-i18n="streaming.stats">统计</span>
+        </button>
+
+        <button id="fs-btn" class="tool" type="button" hidden>
+          <span class="icon" data-icon="maximize" aria-hidden="true"></span>
+          <span id="fs-label" class="tool-label" data-i18n="streaming.fullscreen">全屏</span>
+        </button>
+
+        <div class="tool-wrap tool-wrap-last">
+          <button id="more-btn" class="tool" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="icon" data-icon="power" aria-hidden="true"></span>
+            <span class="tool-label" data-i18n="streaming.disconnect">断开</span>
+          </button>
+          <div id="more-menu" class="menu menu-right" role="menu" hidden>
+            <button id="disconnect-btn" type="button" role="menuitem">
+              <span class="icon" data-icon="log-out" aria-hidden="true"></span>
+              <span data-i18n="streaming.disconnect">断开</span>
+            </button>
+            <button id="forget-btn" type="button" role="menuitem">
+              <span class="icon" data-icon="x" aria-hidden="true"></span>
+              <span>
+                <span class="menu-item-title" data-i18n="streaming.forget">忘记此设备</span>
+                <span class="menu-item-hint" data-i18n="streaming.forgetHint">断开并删除已保存的凭据</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="overlay-paused" class="overlay" hidden>
+        <div class="overlay-panel">
+          <span class="icon overlay-icon" data-icon="pause" aria-hidden="true"></span>
+          <h2 class="overlay-title" data-i18n="overlay.pausedTitle">电脑端已暂停共享</h2>
+          <p class="muted" data-i18n="overlay.pausedHint">在电脑端恢复共享后，画面会自动继续。</p>
+        </div>
+      </div>
+
+      <div id="overlay-reconnect" class="overlay" hidden>
+        <div class="overlay-panel">
+          <span class="spinner" aria-hidden="true"></span>
+          <h2 class="overlay-title" data-i18n="overlay.reconnectTitle">连接已断开</h2>
+          <p class="muted" data-i18n="overlay.reconnectHint">正在尝试重新连接…</p>
+          <p id="reconnect-countdown" class="reconnect-countdown" aria-live="polite"></p>
+          <div class="overlay-actions">
+            <button id="retry-now" class="btn btn-primary" type="button" data-i18n="overlay.retryNow">立即重试</button>
+            <button id="reconnect-pair" class="btn btn-ghost" type="button" data-i18n="overlay.usePin">重新配对</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+      <textarea id="text-input" class="text-input" rows="1" autocomplete="off"
+                autocapitalize="off" autocorrect="off" spellcheck="false"
+                aria-label="Remote keyboard" data-i18n-aria-label="keyboard.title"></textarea>
+    </section>
+
+    <section id="screen-ended" class="screen screen-center" hidden>
+      <div class="ended">
+        <span class="icon ended-icon" data-icon="unplug" aria-hidden="true"></span>
+        <h2 class="ended-title" data-i18n="ended.title">连接已结束</h2>
+        <p id="ended-reason" class="ended-reason"></p>
+        <p id="ended-server" class="muted ended-server"></p>
+        <button id="re-pair" class="btn btn-primary" type="button" data-i18n="ended.rePair">重新配对</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="settings" class="sheet" hidden>
+    <div id="settings-backdrop" class="sheet-backdrop"></div>
+    <aside id="settings-panel" class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header class="sheet-head">
+        <h2 id="settings-title" class="sheet-title" data-i18n="settings.title">设置</h2>
+        <button id="settings-close" class="icon-btn" type="button" data-i18n-aria-label="settings.close">
+          <span class="icon" data-icon="x" aria-hidden="true"></span>
+        </button>
+      </header>
+      <div class="sheet-body">
+        <section class="settings-section">
+          <h3 class="section-title" data-i18n="settings.control">控制</h3>
+          <div class="setting-row">
+            <div class="setting-head">
+              <label for="set-pointer-sens" data-i18n="settings.pointerSensitivity">指针灵敏度</label>
+              <output id="set-pointer-sens-val" for="set-pointer-sens">1.0</output>
+            </div>
+            <input id="set-pointer-sens" class="range" type="range" min="0.2" max="5" step="0.1" value="1">
+          </div>
+          <label class="check setting-check">
+            <input id="set-pointer-accel" type="checkbox" checked>
+            <span class="check-box icon" data-icon="check" aria-hidden="true"></span>
+            <span class="check-text"><span class="check-title" data-i18n="settings.pointerAccel">指针加速</span></span>
+          </label>
+          <div class="setting-row">
+            <div class="setting-head">
+              <label for="set-scroll-speed" data-i18n="settings.scrollSpeed">滚动速度</label>
+              <output id="set-scroll-speed-val" for="set-scroll-speed">1.0</output>
+            </div>
+            <input id="set-scroll-speed" class="range" type="range" min="0.2" max="5" step="0.1" value="1">
+          </div>
+          <label class="check setting-check">
+            <input id="set-natural-scroll" type="checkbox" checked>
+            <span class="check-box icon" data-icon="check" aria-hidden="true"></span>
+            <span class="check-text"><span class="check-title" data-i18n="settings.naturalScroll">自然滚动</span></span>
+          </label>
+          <div class="setting-row">
+            <div class="setting-head">
+              <label for="set-virtual-stick" data-i18n="settings.virtualStick">虚拟摇杆灵敏度</label>
+              <output id="set-virtual-stick-val" for="set-virtual-stick">1.0</output>
+            </div>
+            <input id="set-virtual-stick" class="range" type="range" min="0.2" max="5" step="0.1" value="1">
+          </div>
+          <div class="setting-row">
+            <div class="setting-head">
+              <label for="set-gamepad-stick" data-i18n="settings.gamepadStick">手柄右摇杆灵敏度</label>
+              <output id="set-gamepad-stick-val" for="set-gamepad-stick">1.0</output>
+            </div>
+            <input id="set-gamepad-stick" class="range" type="range" min="0.2" max="5" step="0.1" value="1">
+          </div>
+          <div class="setting-row">
+            <div class="setting-head">
+              <label for="set-deadzone" data-i18n="settings.deadzone">摇杆死区</label>
+              <output id="set-deadzone-val" for="set-deadzone">0.15</output>
+            </div>
+            <input id="set-deadzone" class="range" type="range" min="0" max="0.5" step="0.01" value="0.15">
+          </div>
+          <button id="set-control-reset" class="btn btn-ghost btn-small" type="button" data-i18n="settings.resetControl">恢复默认</button>
+        </section>
+
+        <section class="settings-section">
+          <h3 class="section-title" data-i18n="settings.quality">画质</h3>
+          <div class="segmented" role="group" aria-label="Quality">
+            <button class="seg" type="button" data-quality="auto" data-i18n="quality.auto">自动</button>
+            <button class="seg" type="button" data-quality="saver" data-i18n="quality.saver">省流</button>
+            <button class="seg" type="button" data-quality="smooth" data-i18n="quality.smooth">流畅</button>
+            <button class="seg" type="button" data-quality="standard" data-i18n="quality.standard">标准</button>
+            <button class="seg" type="button" data-quality="high" data-i18n="quality.high">高清</button>
+            <button class="seg" type="button" data-quality="native" data-i18n="quality.native">原画</button>
+            <button class="seg" type="button" data-quality="custom" data-i18n="quality.custom">自定义</button>
+          </div>
+          <p id="quality-actual" class="setting-note">—</p>
+          <p id="quality-fixed" class="setting-note" data-i18n="quality.fixed" hidden>电脑端已固定画质</p>
+
+          <div id="quality-custom-h264" class="custom-quality" hidden>
+            <div class="setting-row setting-row-select">
+              <label class="setting-label" for="quality-h264-res" data-i18n="quality.maxResolution">最大分辨率</label>
+              <select id="quality-h264-res" class="select">
+                <option value="720p">720p</option>
+                <option value="1080p">1080p</option>
+                <option value="1440p">1440p</option>
+                <option value="2160p">2160p</option>
+                <option value="source" data-i18n="quality.source">原始</option>
+              </select>
+            </div>
+            <div class="setting-row setting-row-select">
+              <label class="setting-label" for="quality-h264-fps" data-i18n="quality.fps">帧率</label>
+              <select id="quality-h264-fps" class="select">
+                <option value="15">15 fps</option>
+                <option value="30">30 fps</option>
+                <option value="45">45 fps</option>
+                <option value="60">60 fps</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-head">
+                <label for="quality-h264-bitrate" data-i18n="quality.bitrate">码率</label>
+                <output id="quality-h264-bitrate-val" for="quality-h264-bitrate">10 Mbps</output>
+              </div>
+              <input id="quality-h264-bitrate" class="range" type="range" min="1" max="50" step="1" value="10">
+            </div>
+          </div>
+
+          <div id="quality-custom-jpeg" class="custom-quality" hidden>
+            <div class="setting-row setting-row-select">
+              <label class="setting-label" for="quality-jpeg-res" data-i18n="quality.maxResolution">最大分辨率</label>
+              <select id="quality-jpeg-res" class="select">
+                <option value="720p">720p</option>
+                <option value="1080p">1080p</option>
+                <option value="1440p">1440p</option>
+                <option value="2160p">2160p</option>
+                <option value="source" data-i18n="quality.source">原始</option>
+              </select>
+            </div>
+            <div class="setting-row setting-row-select">
+              <label class="setting-label" for="quality-jpeg-fps" data-i18n="quality.fps">帧率</label>
+              <select id="quality-jpeg-fps" class="select">
+                <option value="5">5 fps</option>
+                <option value="10">10 fps</option>
+                <option value="15">15 fps</option>
+                <option value="20">20 fps</option>
+                <option value="30">30 fps</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-head">
+                <label for="quality-jpeg-quality" data-i18n="quality.jpegQuality">JPEG 质量</label>
+                <output id="quality-jpeg-quality-val" for="quality-jpeg-quality">70</output>
+              </div>
+              <input id="quality-jpeg-quality" class="range" type="range" min="30" max="95" step="1" value="70">
+            </div>
+          </div>
+        </section>
+
+        <section id="gamepad-section" class="settings-section" hidden>
+          <h3 class="section-title" data-i18n="settings.gamepad">手柄</h3>
+          <p class="setting-note" data-i18n="gamepad.hint">连接手柄后按任意键唤醒。按键可映射为键盘按键或鼠标按键。</p>
+          <div id="gamepad-mappings" class="gamepad-mappings"></div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <div id="key-editor" class="sheet" hidden>
+    <div id="key-editor-backdrop" class="sheet-backdrop"></div>
+    <aside id="key-editor-panel" class="sheet-panel sheet-panel-wide" role="dialog" aria-modal="true" aria-labelledby="key-editor-title">
+      <header class="sheet-head">
+        <h2 id="key-editor-title" class="sheet-title" data-i18n="editor.title">编辑布局</h2>
+        <button id="key-editor-collapse" class="btn btn-ghost btn-small" type="button" data-i18n="editor.collapse">查看布局</button>
+        <button id="key-editor-done" class="btn btn-primary btn-small" type="button" data-i18n="editor.done">完成</button>
+      </header>
+      <div class="sheet-body">
+        <div class="editor-bar">
+          <select id="layout-select" class="select" data-i18n-aria-label="editor.layout"></select>
+          <button id="layout-new" class="btn btn-ghost btn-small" type="button" data-i18n="editor.new">新建</button>
+          <button id="layout-rename" class="btn btn-ghost btn-small" type="button" data-i18n="editor.rename">重命名</button>
+          <button id="layout-delete" class="btn btn-ghost btn-small" type="button" data-i18n="editor.deleteLayout">删除</button>
+          <button id="layout-restore" class="btn btn-ghost btn-small" type="button" data-i18n="editor.restorePresets">恢复预设</button>
+        </div>
+
+        <div class="editor-actions">
+          <button id="item-add-button" class="btn btn-ghost btn-small" type="button">
+            <span class="icon" data-icon="plus" aria-hidden="true"></span>
+            <span data-i18n="editor.addButton">添加按钮</span>
+          </button>
+          <button id="item-add-stick" class="btn btn-ghost btn-small" type="button">
+            <span class="icon" data-icon="plus" aria-hidden="true"></span>
+            <span data-i18n="editor.addStick">添加摇杆</span>
+          </button>
+        </div>
+
+        <p id="item-empty" class="setting-note" data-i18n="editor.empty">点选画面上的按键进行编辑，或添加新按键。</p>
+
+        <div id="item-editor" class="item-editor" hidden>
+          <div id="item-label-row" class="setting-row setting-row-select">
+            <label class="setting-label" for="item-label" data-i18n="editor.itemLabel">标签</label>
+            <input id="item-label" class="input input-compact" type="text" maxlength="12" autocomplete="off" spellcheck="false">
+          </div>
+          <div id="item-mode-row" class="setting-row setting-row-select">
+            <label class="setting-label" for="item-mode" data-i18n="editor.itemMode">模式</label>
+            <select id="item-mode" class="select">
+              <option value="hold" data-i18n="editor.mode.hold">按住</option>
+              <option value="toggle" data-i18n="editor.mode.toggle">切换</option>
+              <option value="tap" data-i18n="editor.mode.tap">点按</option>
+            </select>
+          </div>
+          <div id="item-target-row" class="setting-row setting-row-select" hidden>
+            <label class="setting-label" for="item-target" data-i18n="editor.itemTarget">摇杆目标</label>
+            <select id="item-target" class="select">
+              <option value="wasd" data-i18n="editor.target.wasd">WASD</option>
+              <option value="arrows" data-i18n="editor.target.arrows">方向键</option>
+              <option value="mouse" data-i18n="editor.target.mouse">鼠标</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-head">
+              <label for="item-size" data-i18n="editor.itemSize">大小</label>
+              <output id="item-size-val" for="item-size">64</output>
+            </div>
+            <input id="item-size" class="range" type="range" min="44" max="200" step="1" value="64">
+          </div>
+          <div id="item-keys-row" class="setting-block">
+            <div class="setting-label" data-i18n="editor.itemKeys">目标键</div>
+            <div id="item-keys" class="key-picker"></div>
+          </div>
+          <button id="item-delete" class="btn btn-ghost btn-small" type="button" data-i18n="editor.deleteItem">删除此按键</button>
+        </div>
+
+        <div class="editor-io">
+          <div class="editor-actions">
+            <button id="layout-export-btn" class="btn btn-ghost btn-small" type="button" data-i18n="editor.export">导出 JSON</button>
+            <button id="layout-copy" class="btn btn-ghost btn-small" type="button" data-i18n="editor.copy">复制</button>
+          </div>
+          <textarea id="layout-export" class="code-box" readonly spellcheck="false"></textarea>
+          <p class="setting-note" data-i18n="editor.importHint">在此粘贴一个布局对象。字段、范围和键码会被严格校验。</p>
+          <textarea id="layout-import" class="code-box" spellcheck="false" autocapitalize="off"></textarea>
+          <p id="layout-import-error" class="form-error" role="alert"></p>
+          <button id="layout-import-btn" class="btn btn-ghost btn-small" type="button" data-i18n="editor.import">导入 JSON</button>
+          <p id="layout-message" class="setting-note" role="status"></p>
+        </div>
+      </div>
+    </aside>
+    <button id="key-editor-reveal" class="editor-reveal" type="button" hidden>
+      <span class="icon" data-icon="sliders" aria-hidden="true"></span>
+      <span data-i18n="editor.expand">编辑面板</span>
+    </button>
+  </div>
+
+  <script type="module" src="/static/viewer/app.js"></script>
+</body>
+</html>

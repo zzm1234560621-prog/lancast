@@ -1,0 +1,19 @@
+{
+  "name": "LanCast",
+  "short_name": "LanCast",
+  "description": "Low-latency screen mirroring on your local network",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/static/viewer/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

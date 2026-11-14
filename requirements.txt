@@ -1,0 +1,10 @@
+aiohttp>=3.9
+av>=12
+numpy>=1.24
+opencv-python-headless>=4.8
+dxcam>=0.0.5; sys_platform == "win32"
+mss>=9
+cryptography>=42
+qrcode>=7.4
+psutil>=5.9
+pytest>=8

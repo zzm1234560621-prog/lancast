@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>LanCast 管理</title>
+  <link rel="stylesheet" href="/static/admin/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark icon-slot" data-icon="cast"></span>
+      <span class="brand-name">LanCast</span>
+      <span class="brand-divider" aria-hidden="true">/</span>
+      <span id="server-name" class="server-name">—</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="control-status" class="status-pill is-warning" role="status" aria-live="polite" hidden>
+        <span class="status-dot" aria-hidden="true"></span>
+        <span data-i18n="remoteControlActive">远程控制中</span>
+      </span>
+      <button id="stop-controls" class="btn btn-danger-ghost" type="button" hidden>
+        <span class="icon-slot" data-icon="circle-stop"></span>
+        <span data-i18n="stopAllControls">停止所有控制</span>
+      </button>
+      <span id="control-disabled" class="status-pill is-warning" role="status" aria-live="polite" hidden>
+        <span class="status-dot" aria-hidden="true"></span>
+        <span data-i18n="controlDisabled">远程控制已关闭</span>
+      </span>
+      <span id="share-status" class="status-pill is-neutral" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="share-status-text" data-i18n="connecting">正在连接…</span>
+      </span>
+      <button id="pause-button" class="btn btn-secondary" type="button" disabled>
+        <span class="icon-slot" data-icon="pause"></span>
+        <span id="pause-label" data-i18n="pauseSharing">暂停共享</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div id="banner-connection" class="banner banner-error" role="alert" hidden>
+      <span class="banner-icon icon-slot" data-icon="wifi-off"></span>
+      <span data-i18n="connectionError">无法连接到 LanCast 服务</span>
+    </div>
+
+    <div id="banner-auth" class="banner banner-error" role="alert" hidden>
+      <span class="banner-icon icon-slot" data-icon="shield-alert"></span>
+      <span data-i18n="authError">管理令牌无效，请使用控制台打印的管理地址打开</span>
+    </div>
+
+    <section id="warnings" class="warnings" aria-labelledby="warnings-title" hidden>
+      <div class="warnings-heading">
+        <span class="icon-slot" data-icon="triangle-alert"></span>
+        <h2 id="warnings-title" data-i18n="warningsTitle">注意</h2>
+      </div>
+      <ul id="warnings-list" class="warnings-list"></ul>
+    </section>
+
+    <section id="pending-panel" class="card pending-panel" aria-labelledby="pending-title" hidden>
+      <div class="pending-heading">
+        <div>
+          <h2 id="pending-title" class="card-title">
+            <span class="icon-slot" data-icon="user-check"></span>
+            <span data-i18n="pendingTitle">待批准请求</span>
+            <span id="pending-count" class="count count-accent"></span>
+          </h2>
+          <p class="pending-intro" data-i18n="pendingIntro">新设备正在请求连接，请选择允许观看、允许控制或拒绝。</p>
+        </div>
+      </div>
+      <div id="pending-list" class="pending-list"></div>
+    </section>
+
+    <div class="layout-grid">
+      <div class="column">
+        <section class="card connection-card" aria-labelledby="connection-title">
+          <div class="card-heading">
+            <h2 id="connection-title" class="card-title">
+              <span class="icon-slot" data-icon="smartphone"></span>
+              <span data-i18n="connectionTitle">连接设备</span>
+            </h2>
+          </div>
+
+          <div class="connection-grid">
+            <div class="qr-block">
+              <div class="qr-plate">
+                <img id="qr-image" width="260" height="260" alt="" hidden>
+                <span id="qr-missing" class="qr-missing" data-i18n="qrUnavailable" hidden>二维码暂不可用</span>
+              </div>
+            </div>
+
+            <div class="connection-details">
+              <div class="field-block">
+                <div class="field-label" data-i18n="primaryAddress">主地址</div>
+                <div class="copy-line">
+                  <code id="primary-url" class="address">—</code>
+                  <button id="copy-primary" class="icon-button" type="button" disabled
+                          data-i18n-aria-label="copyAddress" data-i18n-title="copyAddress">
+                    <span class="icon-slot" data-icon="copy"></span>
+                  </button>
+                </div>
+              </div>
+
+              <details id="other-addresses" class="other-addresses" hidden>
+                <summary>
+                  <span class="chevron icon-slot" data-icon="chevron-down"></span>
+                  <span data-i18n="otherAddresses">其他地址</span>
+                  <span id="other-count" class="count"></span>
+                </summary>
+                <ul id="other-list" class="other-list"></ul>
+              </details>
+
+              <div class="pin-block">
+                <div class="field-label" data-i18n="pinLabel">配对码</div>
+                <div class="pin-row">
+                  <span id="pin-code" class="pin">—</span>
+                  <button id="rotate-pin" class="btn btn-secondary btn-small" type="button" disabled>
+                    <span class="icon-slot" data-icon="refresh-cw"></span>
+                    <span id="rotate-pin-label" data-i18n="rotatePin">换一个</span>
+                  </button>
+                </div>
+                <div class="pin-expiry">
+                  <span data-i18n="pinRemaining">剩余有效时间</span>
+                  <span id="pin-expiry" class="countdown num">—</span>
+                </div>
+              </div>
+
+              <p class="help-text" data-i18n="pairingHelp">手机/平板连同一 Wi-Fi，用相机扫码；或在浏览器输入地址后填写配对码。</p>
+              <p class="help-text" data-i18n="certHelp">首次访问会提示证书不受信任，属正常现象，选择继续访问即可。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card settings-card" aria-labelledby="settings-title">
+          <div class="card-heading">
+            <h2 id="settings-title" class="card-title">
+              <span class="icon-slot" data-icon="sliders-horizontal"></span>
+              <span data-i18n="settingsTitle">共享设置</span>
+            </h2>
+          </div>
+
+          <form id="settings-form" class="settings-form" novalidate>
+            <div class="form-grid">
+              <label class="form-field" for="setting-fps">
+                <span class="form-label" data-i18n="fpsLabel">帧率</span>
+                <select id="setting-fps" name="fps">
+                  <option value="15">15</option>
+                  <option value="30">30</option>
+                  <option value="60">60</option>
+                </select>
+              </label>
+
+              <label class="form-field" for="setting-resolution">
+                <span class="form-label" data-i18n="resolutionLabel">最大分辨率</span>
+                <select id="setting-resolution" name="resolution">
+                  <option value="1280x720" data-i18n="resolution720">720p（1280×720）</option>
+                  <option value="1920x1080" data-i18n="resolution1080">1080p（1920×1080）</option>
+                  <option value="2560x1440" data-i18n="resolution1440">1440p（2560×1440）</option>
+                  <option value="7680x4320" data-i18n="resolutionNative">原始（7680×4320）</option>
+                </select>
+              </label>
+
+              <label class="form-field" for="setting-bitrate">
+                <span class="form-label" data-i18n="bitrateLabel">码率</span>
+                <span class="input-suffix">
+                  <input id="setting-bitrate" name="bitrate" type="number" min="1" max="50" step="0.5" inputmode="decimal" required>
+                  <span class="suffix" data-i18n="bitrateUnit">Mbps</span>
+                </span>
+              </label>
+
+              <div class="form-field">
+                <label class="form-label" for="setting-jpeg-quality" data-i18n="jpegQuality">JPEG 质量</label>
+                <div class="range-line">
+                  <input id="setting-jpeg-quality" name="jpeg_quality" type="range" min="30" max="95" step="1" value="70">
+                  <output id="jpeg-quality-value" for="setting-jpeg-quality">70</output>
+                </div>
+              </div>
+
+              <label class="form-field" for="setting-jpeg-fps">
+                <span class="form-label" data-i18n="jpegFps">JPEG 帧率</span>
+                <select id="setting-jpeg-fps" name="jpeg_fps">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                </select>
+              </label>
+
+              <div class="form-field switch-field">
+                <span id="approval-label" class="form-label" data-i18n="approval">新设备需要我批准</span>
+                <label class="switch">
+                  <input id="setting-approval" name="approval" type="checkbox" aria-labelledby="approval-label">
+                  <span class="switch-track" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <div class="form-field switch-field">
+                <span id="control-enabled-label" class="form-label" data-i18n="controlEnabled">允许远程控制（总开关）</span>
+                <label class="switch">
+                  <input id="setting-control-enabled" name="control_enabled" type="checkbox" aria-labelledby="control-enabled-label">
+                  <span class="switch-track" aria-hidden="true"></span>
+                </label>
+              </div>
+
+              <div class="form-field switch-field">
+                <span id="viewer-quality-label" class="form-label" data-i18n="viewerQuality">允许观看端自选画质</span>
+                <label class="switch">
+                  <input id="setting-viewer-quality" name="viewer_quality" type="checkbox" aria-labelledby="viewer-quality-label">
+                  <span class="switch-track" aria-hidden="true"></span>
+                </label>
+              </div>
+            </div>
+
+            <div id="settings-error" class="form-error" role="alert" hidden></div>
+
+            <div class="form-actions">
+              <button id="save-settings" class="btn btn-primary" type="submit" disabled>
+                <span class="icon-slot" data-icon="check"></span>
+                <span id="save-settings-label" data-i18n="save">保存</span>
+              </button>
+              <button id="reset-settings" class="btn btn-secondary" type="button" disabled>
+                <span class="icon-slot" data-icon="rotate-ccw"></span>
+                <span data-i18n="reset">重置</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card security-card" aria-labelledby="security-title">
+          <div class="card-heading">
+            <h2 id="security-title" class="card-title">
+              <span class="icon-slot" data-icon="shield-check"></span>
+              <span data-i18n="securityTitle">安全信息</span>
+            </h2>
+          </div>
+
+          <div class="fingerprint-row">
+            <div class="field-label" data-i18n="tlsFingerprint">TLS 证书指纹</div>
+            <div class="copy-line fingerprint-line">
+              <code id="cert-fingerprint" class="fingerprint">—</code>
+              <button id="copy-cert-fingerprint" class="icon-button" type="button" disabled
+                      data-i18n-aria-label="copyFingerprint" data-i18n-title="copyFingerprint">
+                <span class="icon-slot" data-icon="copy"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="fingerprint-row">
+            <div class="field-label" data-i18n="caFingerprint">本地 CA 指纹</div>
+            <div class="copy-line fingerprint-line">
+              <code id="ca-fingerprint" class="fingerprint">—</code>
+              <button id="copy-ca-fingerprint" class="icon-button" type="button" disabled
+                      data-i18n-aria-label="copyFingerprint" data-i18n-title="copyFingerprint">
+                <span class="icon-slot" data-icon="copy"></span>
+              </button>
+            </div>
+          </div>
+
+          <a id="download-ca" class="btn btn-secondary download-link" href="/ca.crt" download="LanCast-CA.crt">
+            <span class="icon-slot" data-icon="download"></span>
+            <span data-i18n="downloadCa">下载 CA 证书</span>
+          </a>
+
+          <p class="help-text security-help" data-i18n="securityHelp">在手机上安装并信任此 CA 后不再有证书警告并可防中间人攻击；只在可信网络上安装；可对照手机上显示的证书指纹。</p>
+        </section>
+      </div>
+
+      <div class="column">
+        <section class="card viewers-card" aria-labelledby="viewers-title">
+          <div class="card-heading">
+            <h2 id="viewers-title" class="card-title">
+              <span class="icon-slot" data-icon="monitor"></span>
+              <span data-i18n="viewersTitle">正在观看</span>
+              <span id="viewers-count" class="count"></span>
+            </h2>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table viewers-table">
+              <caption class="sr-only" data-i18n="viewersTitle">正在观看</caption>
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="deviceName">设备名</th>
+                  <th scope="col" data-i18n="ip">IP 地址</th>
+                  <th scope="col" data-i18n="display">显示器</th>
+                  <th scope="col" data-i18n="mode">模式</th>
+                  <th scope="col" data-i18n="quality">画质</th>
+                  <th scope="col" data-i18n="control">控制</th>
+                  <th scope="col" class="num" data-i18n="fps">fps</th>
+                  <th scope="col" class="num" data-i18n="bitrate">码率 (Mbps)</th>
+                  <th scope="col" class="num" data-i18n="rtt">RTT (ms)</th>
+                  <th scope="col" class="num" data-i18n="latency">延迟 (ms)</th>
+                  <th scope="col" class="num" data-i18n="drops">丢帧</th>
+                  <th scope="col" class="num" data-i18n="connected">连接时长</th>
+                  <th scope="col" class="actions-col" data-i18n="actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="viewers-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card devices-card" aria-labelledby="devices-title">
+          <div class="card-heading">
+            <h2 id="devices-title" class="card-title">
+              <span class="icon-slot" data-icon="users"></span>
+              <span data-i18n="devicesTitle">已记住的设备</span>
+              <span id="devices-count" class="count"></span>
+            </h2>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table devices-table">
+              <caption class="sr-only" data-i18n="devicesTitle">已记住的设备</caption>
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="deviceName">设备名</th>
+                  <th scope="col" data-i18n="lastUsed">最近使用</th>
+                  <th scope="col" data-i18n="lastIp">最近 IP</th>
+                  <th scope="col" data-i18n="online">在线</th>
+                  <th scope="col" data-i18n="allowControl">允许控制</th>
+                  <th scope="col" class="actions-col" data-i18n="actions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="devices-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card log-card" aria-labelledby="log-title">
+          <div class="card-heading">
+            <h2 id="log-title" class="card-title">
+              <span class="icon-slot" data-icon="scroll-text"></span>
+              <span data-i18n="logTitle">事件日志</span>
+              <span id="log-count" class="count"></span>
+            </h2>
+          </div>
+          <ol id="log-list" class="log-list"></ol>
+          <p id="log-empty" class="empty-text" data-i18n="noLogs" hidden>暂无事件</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="false"></div>
+
+  <script type="module" src="/static/admin/admin.js"></script>
+</body>
+</html>
