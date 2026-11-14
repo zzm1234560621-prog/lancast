@@ -1471,7 +1471,7 @@ function populateSettings(settingsValue) {
 
   const kbps = Number(settings.bitrate_kbps);
   const mbps = Number.isFinite(kbps) ? Math.round(kbps / 100) / 10 : 10;
-  dom.bitrate.value = String(Math.min(100, Math.max(1, mbps)));
+  dom.bitrate.value = String(Math.min(200, Math.max(1, mbps)));
 
   const quality = Number(settings.jpeg_quality);
   dom.jpegQuality.value = String(
@@ -1520,7 +1520,7 @@ async function saveSettings() {
   const quality = Number(dom.jpegQuality.value);
   const jpegFps = Number(dom.jpegFps.value);
 
-  if (!Number.isFinite(mbps) || mbps < 1 || mbps > 100) {
+  if (!Number.isFinite(mbps) || mbps < 1 || mbps > 200) {
     showSettingsError(t("invalidBitrate"));
     dom.bitrate.focus();
     return;

@@ -47,8 +47,8 @@ QUALITY_PRESETS = {
 CUSTOM_LIMITS = {
     "max_width": (320, 7680),
     "max_height": (240, 4320),
-    "fps": (5, 120),
-    "bitrate_kbps": (500, 50_000),
+    "fps": (5, 240),
+    "bitrate_kbps": (500, 200_000),
     "jpeg_quality": (20, 95),
 }
 MAX_OUTPUTS_PER_DISPLAY = 4
@@ -184,7 +184,7 @@ class ViewerQueue:
     the drop-to-keyframe policy described in the module docstring.
     """
 
-    MAX_FRAMES = 3   # queued video frames tolerated before dropping (~50 ms at 60 fps)
+    MAX_FRAMES = 2   # queued video frames tolerated before dropping (~33 ms at 60 fps)
 
     def __init__(self, request_keyframe: Callable[[], None]) -> None:
         self._request_keyframe = request_keyframe

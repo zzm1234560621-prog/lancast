@@ -43,18 +43,18 @@ def test_boundary_values_are_accepted():
     settings = Settings()
     assert settings.apply_live(
         {
-            "fps": 120,
+            "fps": 240,
             "max_width": 7680,
             "max_height": 4320,
-            "bitrate_kbps": 100_000,
+            "bitrate_kbps": 200_000,
             "jpeg_quality": 95,
             "jpeg_fps": 60,
         }
     ) == {
-        "fps": 120,
+        "fps": 240,
         "max_width": 7680,
         "max_height": 4320,
-        "bitrate_kbps": 100_000,
+        "bitrate_kbps": 200_000,
         "jpeg_quality": 95,
         "jpeg_fps": 60,
     }
@@ -79,13 +79,13 @@ def test_integral_float_is_accepted_as_integer():
         {"fps": True},
         {"fps": 30.5},
         {"fps": 0},
-        {"fps": 121},
+        {"fps": 241},
         {"max_width": 319},
         {"max_width": 7681},
         {"max_height": 239},
         {"max_height": 4321},
         {"bitrate_kbps": 499},
-        {"bitrate_kbps": 100_001},
+        {"bitrate_kbps": 200_001},
         {"jpeg_quality": 19},
         {"jpeg_quality": 96},
         {"jpeg_fps": 0},

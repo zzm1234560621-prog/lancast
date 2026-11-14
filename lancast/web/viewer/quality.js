@@ -10,7 +10,7 @@ export const QUALITY_PRESET_IDS = ['auto', 'saver', 'smooth', 'standard', 'high'
 export const CONCRETE_PRESETS = ['saver', 'smooth', 'standard', 'high', 'native'];
 export const AUTO_LEVELS = ['saver', 'smooth', 'standard'];
 
-export const H264_FPS_OPTIONS = [15, 30, 45, 60, 90, 120];
+export const H264_FPS_OPTIONS = [15, 30, 45, 60, 90, 120, 144, 240];
 export const JPEG_FPS_OPTIONS = [5, 10, 15, 20, 30];
 
 export const RESOLUTION_OPTIONS = [
@@ -21,7 +21,7 @@ export const RESOLUTION_OPTIONS = [
   { id: 'source', width: 0, height: 0 }
 ];
 
-export const BITRATE_MBPS = { min: 1, max: 100, step: 1, def: 10 };
+export const BITRATE_MBPS = { min: 1, max: 200, step: 1, def: 10 };
 export const JPEG_QUALITY = { min: 30, max: 95, step: 1, def: 70 };
 
 function clampNumber(value, min, max, fallback) {

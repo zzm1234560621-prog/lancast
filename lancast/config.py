@@ -15,10 +15,10 @@ def default_data_dir() -> Path:
 
 # Settings the owner may change at runtime from the admin page: name -> (type, min, max).
 LIVE_SETTINGS: dict[str, tuple[type, int, int]] = {
-    "fps": (int, 1, 120),
+    "fps": (int, 1, 240),
     "max_width": (int, 320, 7680),
     "max_height": (int, 240, 4320),
-    "bitrate_kbps": (int, 500, 100_000),
+    "bitrate_kbps": (int, 500, 200_000),
     "jpeg_quality": (int, 20, 95),
     "jpeg_fps": (int, 1, 60),
     "approval": (bool, 0, 1),
