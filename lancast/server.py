@@ -578,6 +578,7 @@ class Session:
                 return
             if display != self.display:
                 self._release_input()
+            self.queue.set_extreme(data.get("extreme") is True)
             st.hub.subscribe(self, display, codec, data.get("quality"))
             self.display, self.codec = display, codec
         elif kind == "unwatch":

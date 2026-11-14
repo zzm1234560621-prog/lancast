@@ -196,3 +196,24 @@ def test_frames_are_ignored_while_unsubscribed():
         await _assert_idle(queue)
 
     asyncio.run(scenario())
+
+def test_extreme_mode_keeps_one_frame_and_drops_cursor():
+    requests: list[int] = []
+    queue = ViewerQueue(lambda: requests.append(1))
+    queue.reset("h264")
+    queue.set_extreme(True)
+    assert queue.max_frames == 1
+    assert queue.cursor_enabled is False
+
+    queue.put_cursor('{"type":"cursor"}')
+    assert queue._cursor is None
+
+    queue.put_frame(b"key", True, 1, "s1")
+    queue.put_frame(b"delta", False, 1, "s1")
+    assert queue._frames == 0
+    assert queue.dropped == 1
+    assert requests == [1]
+
+    queue.set_extreme(False)
+    assert queue.max_frames == ViewerQueue.MAX_FRAMES
+    assert queue.cursor_enabled is True

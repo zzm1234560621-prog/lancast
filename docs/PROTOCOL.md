@@ -119,7 +119,7 @@ Client → server:
 
 | Message | Meaning |
 |---|---|
-| `{"type":"watch","display":0,"codec":"h264","quality":{"preset":"standard"}}` | subscribe (or switch) to a display; `codec` is `"h264"` or `"jpeg"`; `quality` is optional (§3.6). Sending `watch` again with another `quality` switches quality |
+| `{"type":"watch","display":0,"codec":"h264","quality":{"preset":"standard"},"extreme":false}` | subscribe (or switch) to a display; `codec` is `"h264"` or `"jpeg"`; `quality` is optional (§3.6); `extreme:true` asks for the one-frame queue and disables cursor messages. Sending `watch` again with another `quality` switches quality |
 | `{"type":"input","events":[...]}` | remote-control events (§3.7); only honoured when control is allowed |
 | `{"type":"unwatch"}` | stop receiving media (e.g. page hidden) |
 | `{"type":"keyframe"}` | ask for an IDR (decoder error / resync). Server rate-limits to 1/s per viewer |

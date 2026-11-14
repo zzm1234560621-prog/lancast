@@ -107,6 +107,7 @@ export class SettingsPanel {
     this.onInputChange = opts.onInputChange || function () {};
     this.getQuality = opts.getQuality;
     this.onQualityChange = opts.onQualityChange || function () {};
+    this.onExtremeChange = opts.onExtremeChange || function () {};
     this.getGamepad = opts.getGamepad;
     this.onGamepadChange = opts.onGamepadChange || function () {};
     this.getCodec = opts.getCodec || function () { return 'h264'; };
@@ -210,6 +211,7 @@ export class SettingsPanel {
     const jpegQuality = byId('quality-jpeg-quality');
     const jpegQualityValue = byId('quality-jpeg-quality-val');
     this.lowLatencyBtn = byId('quality-lowlatency');
+    this.extremeBtn = byId('quality-extreme');
 
     if (this.lowLatencyBtn) {
       this.lowLatencyBtn.addEventListener('click', () => {
@@ -222,6 +224,23 @@ export class SettingsPanel {
         quality.custom.h264.fps = 60;
         quality.custom.h264.bitrateMbps = 10;
         this.onQualityChange(quality);
+        this.onExtremeChange(false);
+        this.syncQuality();
+      });
+    }
+
+    if (this.extremeBtn) {
+      this.extremeBtn.addEventListener('click', () => {
+        if (!this.qualityAllowed) {
+          return;
+        }
+        const quality = this.getQuality();
+        quality.preset = 'custom';
+        quality.custom.h264.resolution = '1080p';
+        quality.custom.h264.fps = 60;
+        quality.custom.h264.bitrateMbps = 10;
+        this.onQualityChange(quality);
+        this.onExtremeChange(true);
         this.syncQuality();
       });
     }
@@ -361,6 +380,9 @@ export class SettingsPanel {
     }
     if (this.lowLatencyBtn) {
       this.lowLatencyBtn.disabled = !this.qualityAllowed;
+    }
+    if (this.extremeBtn) {
+      this.extremeBtn.disabled = !this.qualityAllowed;
     }
 
     const custom = quality.custom;

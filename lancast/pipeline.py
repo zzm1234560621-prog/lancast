@@ -197,6 +197,8 @@ class ViewerQueue:
         self._codec: str | None = None
         self._epoch: int | None = None
         self._waiting_key = True
+        self.max_frames = self.MAX_FRAMES
+        self.cursor_enabled = True
         self.dropped = 0
         self.sent_frames = 0
         self.sent_bytes = 0
@@ -210,13 +212,20 @@ class ViewerQueue:
         self._epoch = None
         self._waiting_key = True
 
+    def set_extreme(self, enabled: bool) -> None:
+        """Ultra-low-latency viewers keep one frame and skip cursor updates."""
+        self.max_frames = 1 if enabled else self.MAX_FRAMES
+        self.cursor_enabled = not enabled
+        if enabled:
+            self._cursor = None
+
     def put_control(self, text: str) -> None:
         if not self._closed:
             self._control.append(text)
             self._event.set()
 
     def put_cursor(self, text: str) -> None:
-        if not self._closed:
+        if not self._closed and self.cursor_enabled:
             self._cursor = text
             self._event.set()
 
@@ -245,7 +254,7 @@ class ViewerQueue:
         elif keyframe:
             # Skip ahead: nothing queued before a keyframe is needed any more.
             self.dropped += self._drop_frames()
-        elif self._frames >= self.MAX_FRAMES:
+        elif self._frames >= self.max_frames:
             self.dropped += self._drop_frames()
             self._waiting_key = True
             self._request_keyframe()

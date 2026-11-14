@@ -316,6 +316,7 @@ let inputSettings = normalizeInputSettings(null);
 let qualityPrefs = normalizeQualityPreferences(null);
 let gamepadMapping = normalizeGamepadMapping(null);
 let autoLevel = 'standard';
+let extremeMode = false;
 let droppedTotal = 0;
 let autoLatency = [];
 let autoTimer = 0;
@@ -1028,6 +1029,9 @@ function handlePaused(message) {
 }
 
 function handleCursor(message) {
+  if (extremeMode) {
+    return;
+  }
   const x = Number(message.x);
   const y = Number(message.y);
   if (Number.isFinite(x)) {
@@ -1219,7 +1223,8 @@ function sendWatch() {
     type: 'watch',
     display: currentDisplay,
     codec: currentCodec,
-    quality: quality
+    quality: quality,
+    extreme: extremeMode
   });
 }
 
@@ -2218,12 +2223,17 @@ function createControlStack() {
       return qualityPrefs;
     },
     onQualityChange: function (next) {
+      extremeMode = false;
       qualityPrefs = normalizeQualityPreferences(next);
       saveQualityPrefs();
       if (qualityPrefs.preset === 'auto') {
         autoLevel = 'standard';
         autoQuality.reset(performance.now());
       }
+      scheduleQualityWatch();
+    },
+    onExtremeChange: function (enabled) {
+      extremeMode = !!enabled;
       scheduleQualityWatch();
     },
     getGamepad: function () {
