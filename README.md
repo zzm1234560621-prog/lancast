@@ -2,7 +2,8 @@
 
 把 Windows 电脑的屏幕实时投到同一局域网里的手机、iPad、安卓平板或另一台电脑上。**观看端只需要浏览器**（iOS / iPadOS Safari、Android Chrome、任意桌面浏览器），不用安装 App。
 
-- **低延迟**：H.264 零延迟编码（x264 `zerolatency` / Intel QSV）+ 浏览器 WebCodecs 硬件解码，始终只显示最新一帧；网络变差时直接丢弃积压帧，跳到下一个关键帧追上。本机实测（1080p60）从采集到送达，中位数约 15 ms。
+- **低延迟**：H.264 零延迟编码（x264 `zerolatency` / 核显硬件编码）+ 浏览器 WebCodecs 解码，始终只显示最新一帧；网络变差时直接丢弃积压帧，跳到下一个关键帧追上。本机 1080p60 实测“采集→送达”中位数 **8.9 ms**，手机端到端约 **12–15 ms**；1080p 低延迟模式见下。
+- **自动选最优**：首次启动自动测速本机可用的 H.264 编码器（libx264 / QSV / Media Foundation / NVENC / AMF），按实际耗时选最快方案并缓存，不用用户手调。
 - **加密**：全程 TLS（优先 1.3，仅前向保密套件）。自带名称受约束的本地 CA，可选安装到手机，之后不再有证书警告。
 - **安全**：一次性 PIN / 二维码配对，新设备需电脑端点“允许”；设备令牌可随时撤销；只接受私网来源；管理界面只在本机可访问。详见 [docs/SECURITY.md](docs/SECURITY.md)。
 - **多设备**：默认最多 8 台同时观看。每台可以看不同的显示器；同一显示器的画面只编码一次，再分发给所有观看者。
@@ -21,7 +22,7 @@ python -m venv .venv
 .venv\Scripts\python -m lancast
 ```
 
-也可以直接运行打包好的 `packaging\dist\LanCast\LanCast.exe`（打包方法见文末），不需要装 Python。
+也可以直接运行打包好的 `packaging\dist\LanCast\LanCast.exe`（打包方法见文末），不需要装 Python。完整的安装、防火墙、开机自启、升级和卸载步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 启动后：
 
@@ -32,6 +33,14 @@ python -m venv .venv
    - Android Chrome：点“高级” →“继续前往”。
 4. 在电脑的管理页面点**允许**，画面就出来了。
 5. 默认勾选了“记住此设备”，以后打开同一地址会自动连上，不用再配对。
+
+## 部署方式
+
+- **Windows 包（推荐）**：下载 Release 里的 `LanCast-*-win64.zip`，解压后运行 `LanCast.exe`，保留整个文件夹。
+- **源码**：`python -m venv .venv` → 安装 `requirements.txt` → `.venv\Scripts\python -m lancast`。
+- **自己打包**：`packaging\build.ps1` 生成 `packaging\dist\LanCast\LanCast.exe`。
+
+防火墙、开机自启、证书安装、升级/卸载和排查，见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 ## ⚠ Windows 防火墙（手机连不上时先看这里）
 
@@ -143,20 +152,34 @@ python -m venv .venv
 
 ## 性能（本机实测）
 
-测试机：Intel Core Ultra 9 185H，屏幕 2880×1800，输出 1728×1080 @ 60 fps。服务端与客户端在同一台机器上，用同一个高精度时钟测量“采集完成 → 客户端收到”的耗时：
+测试机：Intel Core Ultra 9 185H + Intel Arc 核显，屏幕 2880×1800 @ 120Hz。服务端与客户端在同一台机器上，用同一个高精度时钟测量“采集完成 → 客户端收到”：
 
-| 编码器 | 实际帧率 | 采集→送达 中位数 / p95 | 说明 |
-|---|---|---|---|
-| libx264（默认） | 57 fps | 15 ms / 25 ms | 多核 CPU 下延迟最低 |
-| h264_qsv | 47 fps | 33 ms / 40 ms | 占用 CPU 少，适合用电池时 |
+| 输出档位 | 采集→送达 p50 | p95 |
+|---|---:|---:|
+| **1080p60（低延迟模式）** | **8.9 ms** | **14.0 ms** |
+| 1080p120 | 9.9 ms | 24.7 ms |
+| 720p120 | 9.0 ms | 10.4 ms |
+| 原生 2880×1800 @ 60 | 13.9 ms | 24.4 ms |
 
-完整链路还要加上：DXGI 抓屏约 8 ms、手机硬件解码 3–6 ms、屏幕刷新最多 1 帧，以及 Wi-Fi 传输（5 GHz 下通常 2–10 ms）。所以局域网里**从电脑屏幕变化到手机上显示，一般在 30–60 ms**。观看端的统计浮层会显示实时估计值。
+关键优化：1080p 缩放从 `INTER_AREA` 改为线性插值（单帧 7.7 ms → 2.1 ms）；H.264 解码后立即绘制，不等下一次 `requestAnimationFrame`；服务端发送队列最多 2 帧。1080p60 比 1080p120 更快，是因为编码耗时翻倍，所以“低延迟模式”固定 1080p60。
+
+完整端到端还要加：手机硬件解码 3–6 ms、屏幕刷新最多 1 帧、Wi-Fi 1–3 ms，所以局域网里大约 **12–15 ms**（视手机和网络）。
+
+自动测速会分别实测本机可用编码器。这台机器上：
+
+```
+libx264 = 7.33 ms/帧
+h264_qsv = 23.15 ms/帧
+→ 选择 libx264
+```
+
+所以不是“有核显就一定用核显”；在 NVIDIA/AMD 机器上 NVENC/AMF 会参与实测，可能胜出。GPU 零拷贝的 FFmpeg QSV 管线也验证过，但这代 Intel Arc 上反而更慢（约 12.5 ms/帧），因此没有放进默认链路。
 
 自己测量：
 
 ```powershell
-.venv\Scripts\python scripts\measure_latency.py --synthetic 2880x1800       # 测试图案
-.venv\Scripts\python scripts\measure_latency.py --encoder h264_qsv          # 真实屏幕（屏幕需要有变化）
+.venv\Scripts\python scripts\measure_latency.py --synthetic 2880x1800
+.venv\Scripts\python scripts\measure_latency.py --encoder libx264 --max-res 1080p --fps 60
 ```
 
 ## 常见问题
