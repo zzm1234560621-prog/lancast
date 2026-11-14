@@ -108,6 +108,10 @@ python -m venv .venv
 - **共享设置**：帧率、最大分辨率、码率、JPEG 质量 / 帧率、是否需要批准，改完立即生效。
 - **暂停共享**、安全信息（证书指纹、CA 下载）、事件日志。
 
+## 自动测速
+
+第一次在这台电脑上启动时，LanCast 会用一段合成画面分别跑一遍可用的 H.264 编码器（libx264、QSV、Media Foundation、NVENC、AMF 等），按 1080p 的实际编码耗时选中最快的一个，结果缓存在数据目录的 `autotune.json`，以后启动直接复用。机器换了或想重新比较，加 `--retune` 启动一次即可；也可以用 `--encoder` 手动指定。
+
 ## 常用参数
 
 ```powershell
@@ -121,7 +125,8 @@ python -m venv .venv
 | `--fps` | 60 | H.264 帧率上限 |
 | `--max-res` | 1080p | 输出分辨率上限：`720p` `1080p` `1440p` `4k` `native` 或 `1920x1080` |
 | `--bitrate` | 10M | H.264 码率，如 `6M`、`15000k` |
-| `--encoder` | auto | `libx264`（低延迟，多核 CPU 下默认）、`h264_qsv`（Intel 核显，省 CPU / 电）等 |
+| `--encoder` | auto | 首次启动自动测速选择（libx264 / h264_qsv / h264_mf / nvenc / amf），也可手动指定 |
+| `--retune` | 关 | 强制重新测速并重新选择编码器 |
 | `--jpeg-quality` / `--jpeg-fps` | 70 / 15 | 兼容模式的画质与帧率 |
 | `--no-approval` | 关 | 新设备配对后无需在电脑上点允许 |
 | `--no-control` | 关 | 启动时关闭远程控制总开关（之后可在管理页打开） |

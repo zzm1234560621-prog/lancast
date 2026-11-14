@@ -904,7 +904,16 @@ def _discover(settings: Settings):
     else:
         displays = list_displays()
     encoders = preferred_h264_backends()
-    if settings.encoder != "auto":
+    if settings.encoder == "auto" and settings.capture != "synthetic":
+        from .encode.autotune import choose_encoder
+        chosen, _report = choose_encoder(
+            settings, displays[0] if displays else None, encoders,
+            force=settings.retune,
+        )
+        if chosen:
+            settings.encoder = chosen
+            encoders = [chosen] + [name for name in encoders if name != chosen]
+    elif settings.encoder != "auto":
         encoders = [settings.encoder] + [e for e in encoders if e != settings.encoder]
     certs = ensure_certificates(settings.data_dir, [a.ip for a in addresses])
     warnings = []

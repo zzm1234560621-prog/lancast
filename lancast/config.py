@@ -52,6 +52,7 @@ class Settings:
     pin_ttl_s: int = 600
     data_dir: Path = field(default_factory=default_data_dir)
     open_admin: bool = True
+    retune: bool = False             # force a fresh encoder benchmark at startup
 
     def public_dict(self) -> dict:
         """The subset shown in / editable from the admin page."""

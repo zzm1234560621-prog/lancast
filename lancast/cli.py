@@ -79,6 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--jpeg-quality", type=int, default=70, help="兼容模式 JPEG 质量 20–95（默认 70）")
     s.add_argument("--jpeg-fps", type=int, default=15, help="兼容模式帧率（默认 15）")
     s.add_argument("--encoder", default="auto", help="H.264 编码器：auto、h264_qsv、libx264 …")
+    s.add_argument("--retune", action="store_true", help="启动时重新测速，重新选择最优 H.264 编码器")
     s.add_argument("--capture", default="auto", choices=["auto", "dxgi", "mss", "synthetic"],
                    help="采集方式（synthetic 为测试图案）")
     s.add_argument("--no-approval", action="store_true", help="新设备配对成功后无需在电脑上点允许")
@@ -135,6 +136,7 @@ def _serve(args: argparse.Namespace) -> int:
         jpeg_quality=max(20, min(95, args.jpeg_quality)),
         jpeg_fps=max(1, min(60, args.jpeg_fps)),
         encoder=args.encoder,
+        retune=args.retune,
         capture=args.capture,
         approval=not args.no_approval,
         control_enabled=not args.no_control,
